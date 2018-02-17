@@ -10,15 +10,20 @@ Further, the Virtual Machines I have been provisioned with were CentOS 7, and so
 ## Setup procedure
 
 
-[Installing PostgreSQL](#postgresdb)
-[Installing required packages](#required_packages)
-[Installing Solr v7.1.0](#solr)
-[Installing CKAN]()
-[Installing Django]()
-[Setting up Nginx]()
-[Setting up UWSGI]()
-[Setting up services]()
-[DataPusher]()
+* [Installing PostgreSQL](#postgresdb)
+* [Installing required packages](#required_packages)
+* [Installing Solr v7.1.0](#install_solr)
+* [Installing CKAN](#install_ckan)
+* [Installing Django](#install_django)
+* [Setting up Nginx](#install_nginx)
+    - Static files
+    - Django
+    - CKAN
+    - Solr
+    - Lets Encrypt
+* [Setting up UWSGI](#install_uwsgi)
+* [Setting up services](#service_setup)
+* [DataPusher](#install_django_)
 
 
 ## <a name="postgresdb">Installing PostgreSQL</a>
@@ -106,7 +111,7 @@ service redis start
 ```
 
 
-## <a name="solr">Installing Solr</a>
+## <a name="install_solr">Installing Solr</a>
 
 
 The default Solr from ubuntu is 1.0, from 2010. Latest is 7.1.0. This is annoying. 
@@ -181,7 +186,7 @@ And
 <dynamicField name="*_pdts" type="pdates" indexed="true" stored="true"/>
 ```
 
-## CKAN
+## <a name="install_ckan">Installing CKAN</a>
 
 
 [These instructions here explain most of it.](http://docs.ckan.org/en/latest/maintaining/installing/install-from-package.html)
@@ -255,15 +260,14 @@ paster --plugin=ckan db clean -c /etc/ckan/default/production.ini
 
 Then initialise and add the sysadmin user back, as shown above.
 
-## Django
+## <a name="install_django">Installing Django</a>
 
 
 Move code for django to /usr/share/www or similar, outside user home directory 
 
 ### Virtualenv
 
-
-## Nginx
+## <a name="install_nginx">Installing Nginx</a>
 
 
 ### Static files
@@ -272,11 +276,22 @@ Move code for django to /usr/share/www or similar, outside user home directory
 
 ### CKAN
 
+*This is only needed if CKAN isn't running as the / root location.*
+
+```
+location /ckan { 
+    rewrite /ckan/(.+) /$1 break; 
+    include uwsgi_params; 
+    uwsgi_param SCRIPT_NAME ''; 
+    uwsgi_pass 127.0.0.1:5000; 
+}
+```
+
 ### Solr
 
 ### Lets Encrypt
 
-## Uwsgi
+## <a name="install_uwsgi">Installing Uwsgi</a>
 
 
 Also a total pain. Use "sudo journalctl –xe" and the nginx logs to try to get them to play nice.
@@ -291,10 +306,10 @@ To run from ckan venv folder (useful for testing if routing is working):
 
 **ckan.wsgi file explaination**
 
-## Setting up services
+## <a name="service_setup">Setting up Services</a>
 
 
 **ckan.service file explaination**
 
-## Datapusher
+## <a name="install_datapusher">Installing Datapusher</a>
 
