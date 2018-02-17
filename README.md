@@ -20,10 +20,10 @@ Further, the Virtual Machines I have been provisioned with were CentOS 7, and so
     - Django
     - CKAN
     - Solr
-    - Lets Encrypt
 * [Setting up UWSGI](#install_uwsgi)
 * [Setting up services](#service_setup)
-* [DataPusher](#install_django_)
+* [DataPusher](#install_datapusher)
+* [Lets Encrypt](#install_https)
 
 
 ## <a name="postgresdb">Installing PostgreSQL</a>
@@ -215,7 +215,6 @@ in file:
 
 ```
 nano ./ckan/lib/default/lib/python2.7/site-packages/ckanext/geoview/public/resource.config
-
 ```
 
 add the line to the *geojson =* section (to tell it where to look for definitions):
@@ -289,7 +288,17 @@ location /ckan {
 
 ### Solr
 
-### Lets Encrypt
+There shouldn't be a need for this to be public facing. Tunnel over ssh instead.
+
+https://www.revsys.com/writings/quicktips/ssh-tunnel.html 
+
+Once solr is running, tunnel to the server to use the browser to add the core using the GUI.
+
+```
+ssh -f user@remote.domain.com -L 2000:remote.domain.com:25 –N
+```
+
+Then change the local browsers proxy settings to forward 127.0.0.1 to port 2000, or whatever custom port above. 
 
 ## <a name="install_uwsgi">Installing Uwsgi</a>
 
@@ -313,3 +322,88 @@ To run from ckan venv folder (useful for testing if routing is working):
 
 ## <a name="install_datapusher">Installing Datapusher</a>
 
+ 
+## <a name="install_https">Lets Encrypt - https</a>
+
+
+https://certbot.eff.org/#centosrhel7-nginx
+https://nixcp.com/install-lets-encrypt-ssl-centos-nginx/
+
+```
+sudo yum clean all && sudo yum update nginx
+```
+
+```
+[username@remote-server ~]$ nginx -v
+nginx version: nginx/1.12.2
+```
+
+
+```
+$ yum -y install yum-utils
+$ yum-config-manager --enable rhui-REGION-rhel-server-extras rhui-REGION-rhel-server-optional
+$ sudo yum install certbot-nginx
+```
+
+For *nginx.conf*
+
+```
+location ^~ /.well-known/acme-challenge {
+    alias /usr/share/nginx/html/.well-known/acme-challenge/;
+}
+```
+
+```
+listen 443 ssl http2;
+
+ssl_certificate /etc/letsencrypt/live/domain-name.com/fullchain.pem;
+
+ssl_certificate_key /etc/letsencrypt/live/domain-name.com/privkey.pem;
+
+# SSL Configuration Start
+
+ssl_stapling on;
+
+ssl_stapling_verify on;
+
+resolver 8.8.4.4 8.8.8.8 valid=300s;
+
+resolver_timeout 10s;
+
+ssl_session_cache shared:SSL:10m;
+
+ssl_session_timeout 10m;
+
+ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+
+ssl_prefer_server_ciphers On;
+
+ssl_ciphers ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:ECDH+3DES:DH+3DES:RSA+AESGCM:RSA+AES:RSA+3DES:!aNULL:!MD5:!DSS;
+
+# Closing SSL configuration
+
+# Stuff required by certbot
+
+location ~ /.well-known {
+    allow all;
+}
+```
+
+
+### Running certbot manually
+
+*If auto config above fails*
+
+```
+sudo certbot certonly -a webroot --webroot-path=/usr/share/nginx/html/ -d domain.name.com
+```
+
+### HTTPS through firewall
+
+Allow https through the firewall:
+
+https://www.digitalocean.com/community/tutorials/how-to-set-up-a-firewall-using-firewalld-on-centos-7
+
+```
+sudo firewall-cmd --zone=public --add-service=https
+```
