@@ -12,6 +12,8 @@ sudo yum install nano python-devel postgresql postgresql-libs python-pip python-
 echo "Starting redis"
 sudo service redis start
 
+echo "Starting Solr install"
+
 # Originally attempted with Solr 7.1.0, assuming 7.x.x isn't too different.
 SOLR_VERSION="7.2.1"
 echo "Using Solr version" $SOLR_VERSION
@@ -42,11 +44,39 @@ echo "Making the solr config directory and rearranging files"
 sudo mkdir -p /var/solr/data/ckan/conf
 sudo cp /var/solr/data/ckan/solrconfig.xml /var/solr/data/ckan/conf/
 sudo cp /var/solr/data/ckan/schema.xml /var/solr/data/ckan/conf/
+sudo cp /var/solr/data/ckan/elevate.xml /var/solr/data/ckan/conf/
 
+echo "Setting ownership of files."
 sudo chown -R solr:solr /var/solr/data/ckan
 
+echo "Restarting everything"
 sudo service solr restart
 sudo service solr status
+
+echo "Adding ckan core to solr"
+sudo -u solr /opt/solr-7.2.1/bin/solr create -c ckan -confdir /var/solr/data/ckan
+
+echo "Beginning CKAN install"
+sudo mkdir -p /usr/lib/ckan/default
+sudo chown `whoami` /usr/lib/ckan/default
+
+echo "Creating Virtual Environment"
+virtualenv --no-site-packages /usr/lib/ckan/default
+source /usr/lib/ckan/default/bin/activate
+
+echo "Install tools and CKAN source code into virtualenv"
+pip install setuptools==36.1
+pip install -e 'git+https://github.com/ckan/ckan.git@ckan-2.7.2#egg=ckan'
+pip install -r /usr/lib/ckan/default/src/ckan/requirements.txt
+deactivate
+source /usr/lib/ckan/default/bin/activate
+
+echo "Create a directory to contain the site’s config files"
+sudo mkdir -p /etc/ckan/default
+sudo chown -R `whoami` /etc/ckan/
+sudo chown -R `whoami` ~/ckan/etc
+
+paster make-config ckan /etc/ckan/default/development.ini
 
 
 
