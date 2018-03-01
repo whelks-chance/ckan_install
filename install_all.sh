@@ -22,7 +22,7 @@ if [ ! -f ./solr-$SOLR_VERSION.tgz ]; then
     wget http://apache.org/dist/lucene/solr/$SOLR_VERSION/solr-$SOLR_VERSION.tgz
 fi
 
-if ! -f /etc/init.d/solr ]; then
+if [ ! -f /etc/init.d/solr ]; then
     echo "Extracting Solr and installing"
     tar xzf solr-$SOLR_VERSION.tgz solr-$SOLR_VERSION/bin/install_solr_service.sh --strip-components=2
     sudo bash ./install_solr_service.sh solr-$SOLR_VERSION.tgz
@@ -44,6 +44,9 @@ sudo cp /var/solr/data/ckan/solrconfig.xml /var/solr/data/ckan/conf/
 sudo cp /var/solr/data/ckan/schema.xml /var/solr/data/ckan/conf/
 
 sudo chown -R solr:solr /var/solr/data/ckan
+
+sudo service solr restart
+sudo service solr status
 
 
 
