@@ -9,7 +9,7 @@ Further, the Virtual Machines I have been provisioned with were CentOS 7, and so
 
 ## Setup procedure
 
-
+* [Initial setup](#initial_setup)
 * [Installing PostgreSQL](#postgresdb)
 * [Installing required packages](#required_packages)
 * [Installing Solr v7.1.0](#install_solr)
@@ -24,6 +24,23 @@ Further, the Virtual Machines I have been provisioned with were CentOS 7, and so
 * [Setting up services](#service_setup)
 * [DataPusher](#install_datapusher)
 * [Lets Encrypt](#install_https)
+
+
+## <a name="initial_setup">Initial Setup</a>
+
+
+```
+sudo yum update
+sudo yum install git
+```
+
+Grab these scripts
+
+```
+git clone https://github.com/whelks-chance/ckan_install.git
+chmod +x ckan_install/install_all.sh
+
+```
 
 
 ## <a name="postgresdb">Installing PostgreSQL</a>
