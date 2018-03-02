@@ -1,5 +1,40 @@
 #!/bin/bash
 
+echo -e "Values required for CKAN development.ini file.\n"
+
+echo -e "Enter sqlalchemy.url"
+echo -e "Format postgresql://USERNAME:PASSWORD@DB_SERVER_URL/DB_NAME"
+read -p ">>> " sqlalchemy_url
+echo -e $sqlalchemy_url '\n'
+
+
+echo -e "Enter ckan.site_id"
+echo -e "Format - default_cacheuk_dev"
+read -p ">>> " site_id
+echo -e $site_id '\n'
+
+echo -e "Enter ckan.site_url"
+echo -e "Format - http://HOST_URL/ckan"
+read -p ">>> " site_url
+echo -e $site_url '\n'
+
+# solr_url = http://127.0.0.1:8983/solr
+
+#cp /etc/ckan/default/production_tpl.ini /etc/ckan/default/production_tpl.ini.test
+cp ./install_files/production_tpl.ini ./install_files/production_tpl.ini.test
+
+#awk '{gsub(/ckan_site_url_placeholder/,'$site_url')}' ./install_files/production_tpl.ini.test
+
+echo "Adding postgres url"
+sed -i "s/ckan_sqlalchemy_url_placeholder/${sqlalchemy_url}/g" ./install_files/production_tpl.ini.test
+echo "Adding site url"
+sed -i 's/ckan_site_url_placeholder/"'$site_url'"/g' ./install_files/production_tpl.ini.test
+echo "Adding site ID"
+sed -i 's/ckan_site_id_placeholder/"'$site_id'"/g' ./install_files/production_tpl.ini.test
+
+
+exit 0
+
 echo "Installing all the things for webserver"
 
 sudo yum --enablerepo=extras install epel-release
@@ -65,6 +100,7 @@ virtualenv --no-site-packages /usr/lib/ckan/default
 source /usr/lib/ckan/default/bin/activate
 
 echo "Install tools and CKAN source code into virtualenv"
+pip install -U pip
 pip install setuptools==36.1
 pip install -e 'git+https://github.com/ckan/ckan.git@ckan-2.7.2#egg=ckan'
 pip install -r /usr/lib/ckan/default/src/ckan/requirements.txt
@@ -77,6 +113,8 @@ sudo chown -R `whoami` /etc/ckan/
 sudo chown -R `whoami` ~/ckan/etc
 
 paster make-config ckan /etc/ckan/default/development.ini
+
+sudo cp /etc/ckan/default/development.ini /etc/ckan/default/development.ini.old
 
 
 
