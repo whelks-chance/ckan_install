@@ -1,39 +1,85 @@
 #!/bin/bash
 
-echo -e "Values required for CKAN development.ini file.\n"
+install_postgres(){
 
-echo -e "Enter sqlalchemy.url"
-echo -e "Format postgresql://USERNAME:PASSWORD@DB_SERVER_URL/DB_NAME"
+    echo $1
+    echo -e "We will install PostgreSQL locally now"
+    sudo yum install -y postgresql
+#    sudo -u postgres psql -l
+
+    echo -e "Adding PostgreSQL user"
+    sudo -u postgres createuser -S -D -R -P ckan_default
+    sudo -u postgres createdb -O ckan_default ckan_default -E utf-8
+
+    if [ $1 ] &&[ $1 == 'exit' ]
+    then
+        echo -e "Installed PostgreSQL only. Quitting..."
+        exit 0
+    fi
+}
+
+
+if [[ $EUID -ne 0 ]]; then
+   echo "This script must be run as root"
+#   TODO replace this
+#   exit 1
+fi
+
+echo -e "Should we install PostgreSQL locally? Select No if PostgreSQL is already installed, either locally or on a different server.\n"
+
+echo -e "Selecting Only will install PostgreSQL only, and then quit. Use this if you want to run this script on the 'database' server, then run it again on the 'web' server.\n"
+
+select yn in Yes Only No Cancel; do
+    case ${yn} in
+        Yes )
+            install_postgres
+            break;;
+        Only )
+            install_postgres exit
+            exit 0;;
+        No )
+            echo -e "\nNot installing PostgreSQL."
+            echo -e "We will assume you already have it installed somewhere.\n"
+            break;;
+        Cancel )
+            exit;;
+    esac
+done
+
+
+echo -e "Values required for CKAN development.ini file.\n"
+echo -e "Enter postgresql url (called sqlalchemy.url in development.ini)"
+echo -e "Format should be postgresql://USERNAME:PASSWORD@DB_SERVER_URL/DB_NAME"
 read -p ">>> " sqlalchemy_url
+
+if [[ -z $sqlalchemy_url ]]
+then
+    echo 'No url given, using default'
+    sqlalchemy_url='postgresql://ckan_default:___password_here___@localhost/ckan_default'
+fi
+
+#TODO do not echo passwords !!
 echo -e $sqlalchemy_url '\n'
 
+#sql_output=`pg_isready $sqlalchemy_url`
+#echo $sql_output
+#psql_code=$?
+#echo -e ${psql_code} "output from pg_isready test\n\n"
+#
+#sql_output=`psql -qtAX $sqlalchemy_url`
+#echo $sql_output
+#psql_code=$?
+#echo -e ${psql_code} "output from psql test\n\n"
 
 echo -e "Enter ckan.site_id"
 echo -e "Format - default_cacheuk_dev"
 read -p ">>> " site_id
-echo -e $site_id '\n'
+echo -e ${site_id} '\n'
 
 echo -e "Enter ckan.site_url"
 echo -e "Format - http://HOST_URL/ckan"
 read -p ">>> " site_url
 echo -e $site_url '\n'
-
-# solr_url = http://127.0.0.1:8983/solr
-
-#cp /etc/ckan/default/production_tpl.ini /etc/ckan/default/production_tpl.ini.test
-cp ./install_files/production_tpl.ini ./install_files/production_tpl.ini.test
-
-#awk '{gsub(/ckan_site_url_placeholder/,'$site_url')}' ./install_files/production_tpl.ini.test
-
-echo "Adding postgres url"
-sed -i "s/ckan_sqlalchemy_url_placeholder/${sqlalchemy_url}/g" ./install_files/production_tpl.ini.test
-echo "Adding site url"
-sed -i 's/ckan_site_url_placeholder/"'$site_url'"/g' ./install_files/production_tpl.ini.test
-echo "Adding site ID"
-sed -i 's/ckan_site_id_placeholder/"'$site_id'"/g' ./install_files/production_tpl.ini.test
-
-
-exit 0
 
 echo "Installing all the things for webserver"
 
