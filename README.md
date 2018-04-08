@@ -24,6 +24,7 @@ Further, the Virtual Machines I have been provisioned with were CentOS 7, and so
 * [Setting up services](#service_setup)
 * [DataPusher](#install_datapusher)
 * [Lets Encrypt](#install_https)
+* [Firewall](#firewall)
 
 
 ## <a name="initial_setup">Initial Setup</a>
@@ -82,14 +83,27 @@ sudo firewall-cmd --zone=public --add-rich-rule='rule family="ipv4" source addre
 
 Add the ports/ port ranges/ IP addresses
 
+Add line to pg_hba.conf to allow access to ckan host IP address
+
 ```
 nano /var/lib/pgsql/9.5/data/pg_hba.conf
+
+host    all         all         XXX.XXX.XXX.XXX/32          trust
 ```
 
 Allow PostgreSQL to listen
 
+Change line to : listen_addresses = '*'
+
 ```
 nano /var/lib/pgsql/9.5/data/postgresql.conf
+```
+
+Setup the database user and tables
+```
+sudo -u postgres createuser -S -D -R -P ckan_default
+
+sudo -u postgres createdb -O ckan_default ckan_default -E utf-8
 ```
 
 ## <a name="required_packages">Installing required packages</a>
@@ -334,6 +348,9 @@ To run from ckan venv folder (useful for testing if routing is working):
 
 ## <a name="service_setup">Setting up Services</a>
 
+Making /etc/systemd/system/*.service files
+
+
 
 **ckan.service file explaination**
 
@@ -422,5 +439,17 @@ Allow https through the firewall:
 https://www.digitalocean.com/community/tutorials/how-to-set-up-a-firewall-using-firewalld-on-centos-7
 
 ```
-sudo firewall-cmd --zone=public --add-service=https
+sudo firewall-cmd --zone=public --permanent --add-service=https
+```
+
+## <a name="firewall">Firewall</a>
+
+To see what firewall services you can add, and which are already running
+
+```
+sudo firewall-cmd --get-services
+sudo firewall-cmd --permanent --list-all
+
+sudo firewall-cmd --permanent --add-service=http
+sudo firewall-cmd --reload
 ```

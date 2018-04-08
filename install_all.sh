@@ -22,24 +22,71 @@ install_postgres(){
 if [[ $EUID -ne 0 ]]; then
    echo "This script must be run as root"
 #   TODO replace this
-#   exit 1
+   exit 1
 fi
 
 echo -e "Should we install PostgreSQL locally? Select No if PostgreSQL is already installed, either locally or on a different server.\n"
 
 echo -e "Selecting Only will install PostgreSQL only, and then quit. Use this if you want to run this script on the 'database' server, then run it again on the 'web' server.\n"
 
-select yn in Yes Only No Cancel; do
+select yn in Yes No Only Cancel; do
     case ${yn} in
         Yes )
             install_postgres
             break;;
-        Only )
-            install_postgres exit
-            exit 0;;
         No )
             echo -e "\nNot installing PostgreSQL."
             echo -e "We will assume you already have it installed somewhere.\n"
+            break;;
+        Only )
+            install_postgres exit
+            exit 0;;
+        Cancel )
+            exit;;
+    esac
+done
+
+echo -e "Set development.ini variables now?\n"
+
+select yn in Yes No Cancel; do
+case ${yn} in
+        Yes )
+            echo -e "Values required for CKAN development.ini file.\n"
+            echo -e "Enter postgresql url (called sqlalchemy.url in development.ini)"
+            echo -e "Format should be postgresql://USERNAME:PASSWORD@DB_SERVER_URL/DB_NAME"
+            read -p ">>> " sqlalchemy_url
+
+            if [[ -z $sqlalchemy_url ]]
+            then
+                echo 'No url given, using default'
+                sqlalchemy_url='postgresql://ckan_default:___password_here___@localhost/ckan_default'
+            fi
+
+            #TODO do not echo passwords !!
+            echo -e $sqlalchemy_url '\n'
+
+            #sql_output=`pg_isready $sqlalchemy_url`
+            #echo $sql_output
+            #psql_code=$?
+            #echo -e ${psql_code} "output from pg_isready test\n\n"
+            #
+            #sql_output=`psql -qtAX $sqlalchemy_url`
+            #echo $sql_output
+            #psql_code=$?
+            #echo -e ${psql_code} "output from psql test\n\n"
+
+            echo -e "Enter ckan.site_id"
+            echo -e "Format - default_cacheuk_dev"
+            read -p ">>> " site_id
+            echo -e ${site_id} '\n'
+
+            echo -e "Enter ckan.site_url"
+            echo -e "Format - http://HOST_URL/ckan"
+            read -p ">>> " site_url
+            echo -e $site_url '\n'
+            break;;
+        No )
+            echo -e "Basic install, config files will need to be edited manually"
             break;;
         Cancel )
             exit;;
@@ -47,56 +94,50 @@ select yn in Yes Only No Cancel; do
 done
 
 
-echo -e "Values required for CKAN development.ini file.\n"
-echo -e "Enter postgresql url (called sqlalchemy.url in development.ini)"
-echo -e "Format should be postgresql://USERNAME:PASSWORD@DB_SERVER_URL/DB_NAME"
-read -p ">>> " sqlalchemy_url
+select yn in Yes No Cancel; do
+    case ${yn} in
+        Yes )
+            echo "Installing all the things for webserver"
+            sudo yum --enablerepo=extras install epel-release
+            sudo yum update
+            sudo yum install nano python-devel postgresql postgresql-libs python-pip python-virtualenv git-core java-1.8.0-openjdk redis python-redis gcc postgresql-devel mlocate gd-devel python34-devel uwsgi pcre pcre-devel lsof nginx
 
-if [[ -z $sqlalchemy_url ]]
-then
-    echo 'No url given, using default'
-    sqlalchemy_url='postgresql://ckan_default:___password_here___@localhost/ckan_default'
-fi
+            # Redis will be used later, no harm in starting it now.
+            echo "Starting redis"
+            sudo service redis restart
+            break;;
+        No )
+            echo -e "\nNot installing packages."
+            break;;
+        Cancel )
+            exit;;
+    esac
+done
 
-#TODO do not echo passwords !!
-echo -e $sqlalchemy_url '\n'
 
-#sql_output=`pg_isready $sqlalchemy_url`
-#echo $sql_output
-#psql_code=$?
-#echo -e ${psql_code} "output from pg_isready test\n\n"
-#
-#sql_output=`psql -qtAX $sqlalchemy_url`
-#echo $sql_output
-#psql_code=$?
-#echo -e ${psql_code} "output from psql test\n\n"
-
-echo -e "Enter ckan.site_id"
-echo -e "Format - default_cacheuk_dev"
-read -p ">>> " site_id
-echo -e ${site_id} '\n'
-
-echo -e "Enter ckan.site_url"
-echo -e "Format - http://HOST_URL/ckan"
-read -p ">>> " site_url
-echo -e $site_url '\n'
-
-echo "Installing all the things for webserver"
-
-sudo yum --enablerepo=extras install epel-release
-sudo yum update
-
-sudo yum install nano python-devel postgresql postgresql-libs python-pip python-virtualenv git-core java-1.8.0-openjdk redis python-redis gcc postgresql-devel mlocate gd-devel python34-devel uwsgi pcre pcre-devel lsof nginx
-
-# Redis will be used later, no harm in starting it now.
-# Also has the affect of caching the sudo password for later actions
-echo "Starting redis"
-sudo service redis start
 
 echo "Starting Solr install"
 
 # Originally attempted with Solr 7.1.0, assuming 7.x.x isn't too different.
 SOLR_VERSION="7.2.1"
+
+echo "Should we use SOLR version " $SOLR_VERSION
+select yn in Yes No ; do
+    case ${yn} in
+        No )
+            read -p ">>> " SOLR_VERSION
+
+            if [[ -z $SOLR_VERSION ]]
+            then
+                echo 'No url given, using default'
+            fi
+            break;;
+        Yes )
+            echo -e "\nNot installing PostgreSQL."
+            echo -e "We will assume you already have it installed somewhere.\n"
+            break;;
+    esac
+done
 echo "Using Solr version" $SOLR_VERSION
 
 if [ ! -f ./solr-$SOLR_VERSION.tgz ]; then
@@ -162,5 +203,10 @@ paster make-config ckan /etc/ckan/default/development.ini
 
 sudo cp /etc/ckan/default/development.ini /etc/ckan/default/development.ini.old
 
+echo "Firewall rules"
+sudo firewall-cmd --permanent --add-service=http
+sudo firewall-cmd --reload
 
+
+echo "Making /etc/systemd/system/*.service files"
 
