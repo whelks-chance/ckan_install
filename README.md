@@ -157,10 +157,7 @@ Replace "7.1.0" with latest version.
 
 I've created some solrconfig.xml and schema.xml files with the correct changes, they're in the ./install_files directory
 
-```
-sudo cp ./install_files/solrconfig.xml /var/solr/data/ckan/
-sudo cp ./install_files/schema.xml /var/solr/data/ckan/schema.xml
-```
+The install script does all the copying of files, it should *just work*.
 
 ### Hard way
 
