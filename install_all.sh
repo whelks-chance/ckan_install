@@ -178,9 +178,13 @@ select yn in Yes No ; do
             sudo mkdir -p /var/solr/data/ckan
 
             echo "Copying solr configs to var directory"
-            sudo cp /opt/solr-$SOLR_VERSION/example/files/conf/solrconfig.xml /var/solr/data/ckan/
-            sudo cp /opt/solr-$SOLR_VERSION/example/files/conf/managed-schema /var/solr/data/ckan/schema.xml
             sudo cp -a /opt/solr-$SOLR_VERSION/example/files/conf/. /var/solr/data/ckan/
+
+#            sudo cp /opt/solr-$SOLR_VERSION/example/files/conf/solrconfig.xml /var/solr/data/ckan/
+#            sudo cp /opt/solr-$SOLR_VERSION/example/files/conf/managed-schema /var/solr/data/ckan/schema.xml
+
+            sudo cp ./install_files/solrconfig.xml /var/solr/data/ckan/
+            sudo cp ./install_files/schema.xml /var/solr/data/ckan/schema.xml
 
             echo "Making the solr config directory and rearranging files"
             sudo mkdir -p /var/solr/data/ckan/conf
