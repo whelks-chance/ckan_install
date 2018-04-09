@@ -12,7 +12,7 @@ Further, the Virtual Machines I have been provisioned with were CentOS 7, and so
 * [Initial setup](#initial_setup)
 * [Installing PostgreSQL](#postgresdb)
 * [Installing required packages](#required_packages)
-* [Installing Solr v7.1.0](#install_solr)
+* [Installing Solr v7.X.X](#install_solr)
 * [Installing CKAN](#install_ckan)
 * [Installing Django](#install_django)
 * [Setting up Nginx](#install_nginx)
@@ -145,11 +145,26 @@ service redis start
 ## <a name="install_solr">Installing Solr</a>
 
 
-The default Solr from ubuntu is 1.0, from 2010. Latest is 7.1.0. This is annoying. 
+The default Solr from ubuntu is 1.0, from 2010. Latest is 7.3.0. This is annoying. 
 
-For solr 7.x the setup is awkward: 
+For solr 7.x.x the setup is awkward: 
 
 The default location for solr cores is "/var/solr/data/ckan/"
+
+Replace "7.1.0" with latest version.
+
+### Easy way
+
+I've created some solrconfig.xml and schema.xml files with the correct changes, they're in the ./install_files directory
+
+```
+sudo cp ./install_files/solrconfig.xml /var/solr/data/ckan/
+sudo cp ./install_files/schema.xml /var/solr/data/ckan/schema.xml
+```
+
+### Hard way
+
+As I had to figure it out (endless Googling of error messages)
 
 ```
 sudo cp /opt/solr-7.1.0/example/files/conf/solrconfig.xml /var/solr/data/ckan
@@ -167,7 +182,7 @@ cp /var/solr/data/ckan/schema.xml /var/solr/data/ckan/conf/
 chown -R solr:solr /var/solr/data/ckan
 ```
 
-**The install script should copy the schema.xml and solrconfig files into place, but for reference, this is what the changes are doing.**
+**The install script should copy the schema.xml and solrconfig.xml files into place, but for reference, this is what the changes are doing.**
 
 The new schema format is missing bits, and needs bits removed, and solrconfig needs to be told to use the previous mechanisms: https://stackoverflow.com/a/43713143
 
@@ -215,6 +230,14 @@ And
 <! -- Some description to find it later --> 
 
 <dynamicField name="*_pdts" type="pdates" indexed="true" stored="true"/>
+```
+
+
+### Set Solr running
+```
+sudo service solr restart
+
+sudo -u solr /opt/solr-7.2.1/bin/solr create -c ckan -confdir /var/solr/data/ckan
 ```
 
 ## <a name="install_ckan">Installing CKAN</a>
