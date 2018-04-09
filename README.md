@@ -25,6 +25,7 @@ Further, the Virtual Machines I have been provisioned with were CentOS 7, and so
 * [DataPusher](#install_datapusher)
 * [Lets Encrypt](#install_https)
 * [Firewall](#firewall)
+* [FAQ](#faq)
 
 
 ## <a name="initial_setup">Initial Setup</a>
@@ -353,7 +354,6 @@ Then change the local browsers proxy settings to forward 127.0.0.1 to port 2000,
 
 ## <a name="install_uwsgi">Installing Uwsgi</a>
 
-
 Also a total pain. Use "sudo journalctl –xe" and the nginx logs to try to get them to play nice.
 
 To run from ckan venv folder (useful for testing if routing is working): 
@@ -362,23 +362,34 @@ To run from ckan venv folder (useful for testing if routing is working):
 ~/ckan/lib/default/bin/uwsgi --socket :5000 --wsgi-file ./ckan.wsgi --virtualenv ~/ckan/lib/default --workers 4 --enable-threads -b 32768 --master --logto ./logs.txt
 ```
 
+### Copy CKAN files into place
+
+```
+cp /etc/ckan/default/production.ini /usr/lib/ckan/default/production.ini
+cp /usr/lib/ckan/default/src/ckan/who.ini /usr/lib/ckan/default/who.ini
+
+```
+
+
+
 ### ckan.wsgi
 
-**ckan.wsgi file explaination**
+A ckan.wsgi file is provided in ./install_files. 
+
+This can be copied into /usr/lib/ckan/default/ along with production.ini and who.ini
 
 ## <a name="service_setup">Setting up Services</a>
 
 Making /etc/systemd/system/*.service files
 
+A ckan.service file is provided in ./install_files. Copy it to /etc/systemd/system/
 
-
-**ckan.service file explaination**
+You may need to update the *User=nginx* to a different user.
 
 ## <a name="install_datapusher">Installing Datapusher</a>
 
  
 ## <a name="install_https">Lets Encrypt - https</a>
-
 
 https://certbot.eff.org/#centosrhel7-nginx
 https://nixcp.com/install-lets-encrypt-ssl-centos-nginx/
@@ -473,3 +484,16 @@ sudo firewall-cmd --permanent --list-all
 sudo firewall-cmd --permanent --add-service=http
 sudo firewall-cmd --reload
 ```
+
+## <a name="faq">FAQ
+
+### CKAN "No section: 'formatters'" error
+
+The development.ini or production.ini file is probably missing, or in the wrong place. Check it is in the same directory as the ckan.wsgi file.
+
+### Which solr version is the latest?
+
+http://apache.org/dist/lucene/solr/
+
+Currently tested on 7.1.0, 7.2.1 and 7.3.0
+

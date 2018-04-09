@@ -223,6 +223,7 @@ select yn in Yes No ; do
             echo "Install tools and CKAN source code into virtualenv"
             pip install -U pip
             pip install setuptools==36.1
+            pip install -U uwsgi
             pip install -e 'git+https://github.com/ckan/ckan.git@ckan-2.7.2#egg=ckan'
             pip install -r /usr/lib/ckan/default/src/ckan/requirements.txt
             deactivate

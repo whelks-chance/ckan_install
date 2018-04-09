@@ -1,0 +1,13 @@
+[Unit]
+Description=uWSGI instance to serve ckan
+After=network.target
+
+[Service]
+User=nginx
+Group=nginx
+WorkingDirectory=/usr/lib/ckan/default
+Environment="PATH=/usr/lib/ckan/default/bin"
+ExecStart=/usr/lib/ckan/default/bin/uwsgi --socket :5000 --wsgi-file /usr/lib/ckan/default/ckan.wsgi --virtualenv /usr/lib/ckan/default --workers 4 --enable-threads -b 32768 --logto ./ckan_logs.txt
+
+[Install]
+WantedBy=multi-user.target
