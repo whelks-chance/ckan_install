@@ -25,9 +25,9 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-echo -e "Should we install PostgreSQL locally? Select No if PostgreSQL is already installed, either locally or on a different server.\n"
+echo -e "\nShould we install PostgreSQL locally? Select No if PostgreSQL is already installed, either locally or on a different server."
 
-echo -e "Selecting Only will install PostgreSQL only, and then quit. Use this if you want to run this script on the 'database' server, then run it again on the 'web' server.\n"
+echo -e "Selecting Only will install PostgreSQL only, and then quit. Use this if you want to run this script on the 'database' server, then run it again on the 'web' server."
 
 select yn in Yes No Only Cancel; do
     case ${yn} in
@@ -46,7 +46,7 @@ select yn in Yes No Only Cancel; do
     esac
 done
 
-echo -e "Set development.ini variables now?\n"
+echo -e "Set development.ini variables now?"
 
 select yn in Yes No Cancel; do
 case ${yn} in
@@ -86,13 +86,14 @@ case ${yn} in
             echo -e $site_url '\n'
             break;;
         No )
-            echo -e "Basic install, config files will need to be edited manually"
+            echo -e "Basic install, config files will need to be edited manually\n"
             break;;
         Cancel )
             exit;;
     esac
 done
 
+echo -e "Install all required system packages now?"
 
 select yn in Yes No Cancel; do
     case ${yn} in
@@ -107,7 +108,7 @@ select yn in Yes No Cancel; do
             sudo service redis restart
             break;;
         No )
-            echo -e "\nNot installing packages."
+            echo -e "Not installing packages."
             break;;
         Cancel )
             exit;;
@@ -116,97 +117,140 @@ done
 
 
 
-echo "Starting Solr install"
+echo -e "\nStarting Solr install\n"
 
 # Originally attempted with Solr 7.1.0, assuming 7.x.x isn't too different.
-SOLR_VERSION="7.2.1"
+# Now at 7.3.0...
 
-echo "Should we use SOLR version " $SOLR_VERSION
+SOLR_VERSION="7.3.0"
+
+echo -e "Should we use SOLR version" $SOLR_VERSION "?"
 select yn in Yes No ; do
     case ${yn} in
         No )
-            read -p ">>> " SOLR_VERSION
+            echo -e "Please give valid SOLR version to download.\n"
+            read -p ">>> " USR_SOLR_VERSION
 
-            if [[ -z $SOLR_VERSION ]]
+            if [[ -z $USR_SOLR_VERSION ]]
             then
-                echo 'No url given, using default'
+                echo 'No version given, using default'
+            else
+                $SOLR_VERSION=$USR_SOLR_VERSION
             fi
             break;;
         Yes )
-            echo -e "\nNot installing PostgreSQL."
-            echo -e "We will assume you already have it installed somewhere.\n"
             break;;
     esac
 done
+
 echo "Using Solr version" $SOLR_VERSION
 
-if [ ! -f ./solr-$SOLR_VERSION.tgz ]; then
-    #TODO check for mirrors?
-    echo "Solr .tgz not found, dowloading it from apache.org"
-    wget http://apache.org/dist/lucene/solr/$SOLR_VERSION/solr-$SOLR_VERSION.tgz
-fi
+echo -e "\nShould we download and install SOLR" $SOLR_VERSION "?"
+select yn in Yes No ; do
+    case ${yn} in
+        No )
+            break;;
+        Yes )
+            if [ ! -f ./solr-$SOLR_VERSION.tgz ]; then
+                #TODO check for mirrors?
+                echo "Solr .tgz not found, dowloading it from apache.org"
+                wget http://apache.org/dist/lucene/solr/$SOLR_VERSION/solr-$SOLR_VERSION.tgz
+            fi
 
-if [ ! -f /etc/init.d/solr ]; then
-    echo "Extracting Solr and installing"
-    tar xzf solr-$SOLR_VERSION.tgz solr-$SOLR_VERSION/bin/install_solr_service.sh --strip-components=2
-    sudo bash ./install_solr_service.sh solr-$SOLR_VERSION.tgz
-else
-    echo "File /etc/init.d/solr exists, so will not try to install solr again"
-fi
+            if [ ! -f /etc/init.d/solr ]; then
+                echo "Extracting Solr and installing"
+                tar xzf solr-$SOLR_VERSION.tgz solr-$SOLR_VERSION/bin/install_solr_service.sh --strip-components=2
+                sudo bash ./install_solr_service.sh solr-$SOLR_VERSION.tgz
+            else
+                echo "File /etc/init.d/solr exists, so will not try to install solr again"
+            fi
+            break;;
+    esac
+done
 
-echo "Creating solr configs directory /var/solr/data/ckan"
-sudo mkdir -p /var/solr/data/ckan
+echo -e "\nShould we try to (re)arrange SOLR config files and directories?"
+select yn in Yes No ; do
+    case ${yn} in
+        No )
+            break;;
+        Yes )
+            echo "Creating solr configs directory /var/solr/data/ckan"
+            sudo mkdir -p /var/solr/data/ckan
 
-echo "Copying solr configs to var directory"
-sudo cp /opt/solr-$SOLR_VERSION/example/files/conf/solrconfig.xml /var/solr/data/ckan/
-sudo cp /opt/solr-$SOLR_VERSION/example/files/conf/managed-schema /var/solr/data/ckan/schema.xml
-sudo cp -a /opt/solr-$SOLR_VERSION/example/files/conf/. /var/solr/data/ckan/
+            echo "Copying solr configs to var directory"
+            sudo cp /opt/solr-$SOLR_VERSION/example/files/conf/solrconfig.xml /var/solr/data/ckan/
+            sudo cp /opt/solr-$SOLR_VERSION/example/files/conf/managed-schema /var/solr/data/ckan/schema.xml
+            sudo cp -a /opt/solr-$SOLR_VERSION/example/files/conf/. /var/solr/data/ckan/
 
-echo "Making the solr config directory and rearranging files"
-sudo mkdir -p /var/solr/data/ckan/conf
-sudo cp /var/solr/data/ckan/solrconfig.xml /var/solr/data/ckan/conf/
-sudo cp /var/solr/data/ckan/schema.xml /var/solr/data/ckan/conf/
-sudo cp /var/solr/data/ckan/elevate.xml /var/solr/data/ckan/conf/
+            echo "Making the solr config directory and rearranging files"
+            sudo mkdir -p /var/solr/data/ckan/conf
+            sudo cp /var/solr/data/ckan/solrconfig.xml /var/solr/data/ckan/conf/
+            sudo cp /var/solr/data/ckan/schema.xml /var/solr/data/ckan/conf/
+            sudo cp /var/solr/data/ckan/elevate.xml /var/solr/data/ckan/conf/
 
-echo "Setting ownership of files."
-sudo chown -R solr:solr /var/solr/data/ckan
+            echo "Setting ownership of files."
+            sudo chown -R solr:solr /var/solr/data/ckan
 
-echo "Restarting everything"
-sudo service solr restart
-sudo service solr status
+            echo "Restarting everything"
+            sudo service solr restart
+            sudo service solr status
 
-echo "Adding ckan core to solr"
-sudo -u solr /opt/solr-7.2.1/bin/solr create -c ckan -confdir /var/solr/data/ckan
-
-echo "Beginning CKAN install"
-sudo mkdir -p /usr/lib/ckan/default
-sudo chown `whoami` /usr/lib/ckan/default
-
-echo "Creating Virtual Environment"
-virtualenv --no-site-packages /usr/lib/ckan/default
-source /usr/lib/ckan/default/bin/activate
-
-echo "Install tools and CKAN source code into virtualenv"
-pip install -U pip
-pip install setuptools==36.1
-pip install -e 'git+https://github.com/ckan/ckan.git@ckan-2.7.2#egg=ckan'
-pip install -r /usr/lib/ckan/default/src/ckan/requirements.txt
-deactivate
-source /usr/lib/ckan/default/bin/activate
-
-echo "Create a directory to contain the site’s config files"
-sudo mkdir -p /etc/ckan/default
-sudo chown -R `whoami` /etc/ckan/
-sudo chown -R `whoami` ~/ckan/etc
-
-paster make-config ckan /etc/ckan/default/development.ini
-
-sudo cp /etc/ckan/default/development.ini /etc/ckan/default/development.ini.old
-
-echo "Firewall rules"
-sudo firewall-cmd --permanent --add-service=http
-sudo firewall-cmd --reload
+            echo "Adding ckan core to solr"
+            sudo -u solr /opt/solr-7.2.1/bin/solr create -c ckan -confdir /var/solr/data/ckan
+            break;;
+    esac
+done
 
 
-echo "Making /etc/systemd/system/*.service files"
+echo -e "\nShould we install CKAN 2.7.2 python virtual environment and packages? "
+select yn in Yes No ; do
+    case ${yn} in
+        No )
+            break;;
+        Yes )
+            echo "Beginning CKAN install"
+            sudo mkdir -p /usr/lib/ckan/default
+            sudo chown `whoami` /usr/lib/ckan/default
 
+            echo "Creating Virtual Environment"
+            virtualenv --no-site-packages /usr/lib/ckan/default
+            source /usr/lib/ckan/default/bin/activate
+
+            echo "Install tools and CKAN source code into virtualenv"
+            pip install -U pip
+            pip install setuptools==36.1
+            pip install -e 'git+https://github.com/ckan/ckan.git@ckan-2.7.2#egg=ckan'
+            pip install -r /usr/lib/ckan/default/src/ckan/requirements.txt
+            deactivate
+            source /usr/lib/ckan/default/bin/activate
+
+            echo "Create a directory to contain the site’s config files"
+            sudo mkdir -p /etc/ckan/default
+            sudo chown -R `whoami` /etc/ckan/
+            sudo chown -R `whoami` ~/ckan/etc
+
+            paster make-config ckan /etc/ckan/default/development.ini
+
+            sudo cp /etc/ckan/default/development.ini /etc/ckan/default/development.ini.old
+            break;;
+    esac
+done
+
+echo -e "\nShould we add firewall-cmd http and https rules? "
+select yn in Yes No ; do
+    case ${yn} in
+        No )
+            break;;
+        Yes )
+            echo "Adding firewall-cmd http and https rules"
+            sudo firewall-cmd --permanent --add-service=http
+            sudo firewall-cmd --permanent --add-service=http
+            sudo firewall-cmd --reload
+            break;;
+    esac
+done
+
+#echo "Making /etc/systemd/system/*.service files"
+
+echo -e "\nAutomated part complete, there's probably more to do though."
+echo -e "Exiting...\n\n"
