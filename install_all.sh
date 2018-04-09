@@ -135,7 +135,7 @@ select yn in Yes No ; do
             then
                 echo 'No version given, using default'
             else
-                $SOLR_VERSION=$USR_SOLR_VERSION
+                SOLR_VERSION=$USR_SOLR_VERSION
             fi
             break;;
         Yes )
