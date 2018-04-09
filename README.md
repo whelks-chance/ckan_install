@@ -231,7 +231,7 @@ And
 ```
 
 
-### Set Solr running
+### Set Solr running, and create the core from (our slightly amended) CKAN xml files
 ```
 sudo service solr restart
 
@@ -294,6 +294,8 @@ ckan.plugins = datastore datapusher stats text_view image_view recline_view recl
 ```
 
 ### Initialising the DB
+
+Check the core is created, update the solr_url in production.ini, probably to *solr_url = http://127.0.0.1:8983/solr/ckan/*
 
 ```
 paster --plugin=ckan db init -c /etc/ckan/default/production.ini 
