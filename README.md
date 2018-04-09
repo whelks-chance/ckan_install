@@ -247,6 +247,29 @@ sudo -u solr /opt/solr-7.2.1/bin/solr create -c ckan -confdir /var/solr/data/cka
 
 Ckan .ini file, change the site.root to /ckan/ so that nginx can forward the resource files correctly.
 
+Update the solr_url in production.ini, probably to *solr_url = http://127.0.0.1:8983/solr/ckan/*
+
+### Initialising the DB
+
+Check the core is created. If you get Error 404, follow the "bin/solr create" instructions above, and check the solr_url is correct in production.ini
+
+```
+paster --plugin=ckan db init -c /etc/ckan/default/production.ini 
+
+paster –plugin=ckan sysadmin add <<username>> email=<<an email address>> name=<<username>> -c /etc/ckan/default/<<development.ini or production.ini>>
+```
+
+### Re-initialising the DB
+
+```
+source ~/ckan/lib/default/bin/activate 
+
+paster --plugin=ckan db clean -c /etc/ckan/default/production.ini 
+```
+
+Then initialise and add the sysadmin user back, as shown above.
+
+
 *TODO: CORS without just doing allow all. Figure out whitelists.*
 *http://docs.ckan.org/en/latest/maintaining/configuration.html#ckan-cors-origin-allow-all*
 *ckan.cors.origin_allow_all = true*
@@ -292,26 +315,6 @@ Adding plugins to production.ini:
 ```
 ckan.plugins = datastore datapusher stats text_view image_view recline_view recline_map_view resource_proxy geojson_view 
 ```
-
-### Initialising the DB
-
-Check the core is created, update the solr_url in production.ini, probably to *solr_url = http://127.0.0.1:8983/solr/ckan/*
-
-```
-paster --plugin=ckan db init -c /etc/ckan/default/production.ini 
-
-paster –plugin=ckan sysadmin add <<username>> email=<<an email address>> name=<<username>> -c /etc/ckan/default/<<development.ini or production.ini>>
-```
-
-### Re-initialising the DB
-
-```
-source ~/ckan/lib/default/bin/activate 
-
-paster --plugin=ckan db clean -c /etc/ckan/default/production.ini 
-```
-
-Then initialise and add the sysadmin user back, as shown above.
 
 ## <a name="install_django">Installing Django</a>
 
@@ -492,6 +495,10 @@ sudo firewall-cmd --reload
 ### CKAN "No section: 'formatters'" error
 
 The development.ini or production.ini file is probably missing, or in the wrong place. Check it is in the same directory as the ckan.wsgi file.
+
+### ERROR [ckan.lib.search.common] Solr responded with an error (HTTP 404)
+
+You may need to manually create the core (see above) and check the production.ini file to ensure the solr_url is correct.
 
 ### Which solr version is the latest?
 
