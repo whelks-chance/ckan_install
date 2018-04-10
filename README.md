@@ -316,6 +316,24 @@ Adding plugins to production.ini:
 ckan.plugins = datastore datapusher stats text_view image_view recline_view recline_map_view resource_proxy geojson_view 
 ```
 
+### Setup CKAN
+
+```
+source /usr/lib/ckan/default/bin/activate
+
+cd /usr/lib/ckan/default/src/ckan
+
+paster --plugin=ckan sysadmin add <USERNAME> email=<EMAIL> name=<USERNAME> -c /etc/ckan/default/production.ini 
+```
+
+And if you like
+
+```
+paster --plugin=ckan create-test-data -c /etc/ckan/default/production.ini
+```
+
+Add an organisation via the website, and create a new user to provide the API KEY for the backend to use.
+
 ## <a name="install_django">Installing Django</a>
 
 
