@@ -6,10 +6,12 @@ install_postgres(){
     echo -e "We will install PostgreSQL locally now"
     sudo yum install -y postgresql-server postgresql-devel postgis
 #    sudo -u postgres psql -l
+    sudo service postgresql initdb
+    sudo service postgresql restart
 
     echo -e "Adding PostgreSQL user"
     sudo -u postgres createuser -S -D -R -P ckan_default
-    sudo -u postgres createdb -O ckan_default ckan_default -E utf-8
+    sudo -u postgres createdb -O ckan_default ckan_default -E utf-8 --template=template0
 
     if [ $1 ] &&[ $1 == 'exit' ]
     then
@@ -53,7 +55,7 @@ case ${yn} in
         Yes )
             echo -e "Values required for CKAN development.ini file.\n"
             echo -e "Enter postgresql url (called sqlalchemy.url in development.ini)"
-            echo -e "Format should be postgresql://USERNAME:PASSWORD@DB_SERVER_URL/DB_NAME"
+            echo -e "Format should be postgresql://ckan_default:PASSWORD@localhost/ckan_default"
             read -p ">>> " sqlalchemy_url
 
             if [[ -z $sqlalchemy_url ]]
@@ -76,12 +78,12 @@ case ${yn} in
             #echo -e ${psql_code} "output from psql test\n\n"
 
             echo -e "Enter ckan.site_id"
-            echo -e "Format - default_cacheuk_dev"
+            echo -e "Format - some_name_for_the_site"
             read -p ">>> " site_id
             echo -e ${site_id} '\n'
 
             echo -e "Enter ckan.site_url"
-            echo -e "Format - http://HOST_URL/ckan"
+            echo -e "Format - http(s)://HOST_URL/ckan"
             read -p ">>> " site_url
             echo -e $site_url '\n'
             break;;
@@ -121,8 +123,13 @@ echo -e "\nStarting Solr install\n"
 
 # Originally attempted with Solr 7.1.0, assuming 7.x.x isn't too different.
 # Now at 7.3.0...
+# 7.3.1
 
-SOLR_VERSION="7.3.0"
+SOLR_VERSION="7.3.1"
+echo "This installer was last tested using Solr version" $SOLR_VERSION
+
+echo "Please check the website http://lucene.apache.org/solr/guide/ to ensure this is still the latest version."
+# http://apache.org/dist/lucene/solr/
 
 echo -e "Should we use SOLR version" $SOLR_VERSION "?"
 select yn in Yes No ; do
@@ -142,8 +149,6 @@ select yn in Yes No ; do
             break;;
     esac
 done
-
-echo "Using Solr version" $SOLR_VERSION
 
 echo -e "\nShould we download and install SOLR" $SOLR_VERSION "?"
 select yn in Yes No ; do
