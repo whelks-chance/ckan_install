@@ -541,5 +541,5 @@ You may need to manually create the core (see above) and check the production.in
 
 http://apache.org/dist/lucene/solr/
 
-Currently tested on 7.1.0, 7.2.1 and 7.3.0
+Currently tested on 7.1.0, 7.2.1, 7.3.0, 7.3.1
 

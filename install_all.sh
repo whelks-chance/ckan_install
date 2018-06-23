@@ -95,7 +95,7 @@ case ${yn} in
     esac
 done
 
-echo -e "Install all required system packages now?"
+echo -e "Install all required system packages now? We will update packages first."
 
 select yn in Yes No Cancel; do
     case ${yn} in
@@ -205,7 +205,7 @@ select yn in Yes No ; do
             sudo service solr status
 
             echo "Adding ckan core to solr"
-            sudo -u solr /opt/solr-7.2.1/bin/solr create -c ckan -confdir /var/solr/data/ckan
+            sudo -u solr /opt/solr-$SOLR_VERSION/bin/solr create -c ckan -confdir /var/solr/data/ckan
             break;;
     esac
 done
@@ -288,6 +288,18 @@ select yn in Yes No ; do
             sudo firewall-cmd --permanent --add-service=http
             sudo firewall-cmd --permanent --add-service=http
             sudo firewall-cmd --reload
+            break;;
+    esac
+done
+
+echo -e "\nShould we start nginx? "
+select yn in Yes No ; do
+    case ${yn} in
+        No )
+            break;;
+        Yes )
+            echo "Starting nginx"
+            sudo service nginx restart
             break;;
     esac
 done
