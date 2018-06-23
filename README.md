@@ -334,6 +334,25 @@ paster --plugin=ckan create-test-data -c /etc/ckan/default/production.ini
 
 Add an organisation via the website, and create a new user to provide the API KEY for the backend to use.
 
+### Setup the DataStore, DataPusher, FileStore etc
+
+Somewhere to put data
+http://docs.ckan.org/en/latest/maintaining/datastore.html
+
+Put data into it automatically
+http://docs.ckan.org/projects/datapusher/en/latest/deployment.html
+
+
+http://docs.ckan.org/en/latest/maintaining/filestore.html
+
+Issues with DataPusher having wrong version of Flask as default:
+http://flask.pocoo.org/docs/0.12/upgrading/#extension-imports
+
+```
+
+pip install flask==0.12
+```
+
 ## <a name="install_django">Installing Django</a>
 
 

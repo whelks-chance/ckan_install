@@ -4,7 +4,7 @@ install_postgres(){
 
     echo $1
     echo -e "We will install PostgreSQL locally now"
-    sudo yum install -y postgresql
+    sudo yum install -y postgresql-server postgresql-devel postgis
 #    sudo -u postgres psql -l
 
     echo -e "Adding PostgreSQL user"
@@ -237,6 +237,38 @@ select yn in Yes No ; do
             paster make-config ckan /etc/ckan/default/development.ini
 
             sudo cp /etc/ckan/default/development.ini /etc/ckan/default/development.ini.old
+            break;;
+    esac
+done
+
+http://docs.ckan.org/en/latest/maintaining/datastore.html
+
+echo -e "\nShould we install the DataPusher? "
+select yn in Yes No ; do
+    case ${yn} in
+        No )
+            break;;
+        Yes )
+            git clone https://github.com/ckan/datapusher
+
+            cd datapusher/
+            virtualenv datapusher
+            source datapusher/bin/activate
+
+            sudo yum install libxml2 libxml2-devel libxslt-devel openssl-devel
+
+            pip install --update pip
+            pip install -U setuptools
+            pip install -r requirements.txt
+            pip install -e .
+
+            pip uninstall flask
+            pip install flask==0.12
+
+
+            echo -e "\nYou will need to add datapusher to the ckan settings file."
+            echo -e "For more info, see http://docs.ckan.org/projects/datapusher/en/latest/development.html"
+            echo -e "\nTo test, run:\npython datapusher/main.py deployment/datapusher_settings.py"
             break;;
     esac
 done
