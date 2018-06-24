@@ -20,7 +20,7 @@ install_postgres(){
     fi
 }
 
-
+echo "Who am I? " whoami
 if [[ $EUID -ne 0 ]]; then
    echo "This script must be run as root"
 #   TODO replace this
@@ -220,6 +220,9 @@ select yn in Yes No ; do
         Yes )
             echo "Beginning CKAN install"
             sudo mkdir -p /usr/lib/ckan/default
+#            FIXME this creates all files with owner root
+#           TODO use who am i | awk '{print $1}' then chown dir back to user accessible
+#           sudo chown $non_root_user -R /usr/lib/ckan/default/
             sudo chown `whoami` /usr/lib/ckan/default
 
             echo "Creating Virtual Environment"
@@ -252,7 +255,9 @@ done
 
 # TODO automate this bit
 echo -e "\nIf this is the first time running this installer, you should quit now and edit the development/production.ini file."
-echo "Then you can run this script again, and skip the steps until you are back here."
+echo "Check the README at /ckan_install#install_ckan for instructions and directions to some proper documentation."
+echo "Now would also be a good time to edit the postgresql.conf and pg_hba.conf files to ensure PostgreSQL is accessible and listening."
+echo "\nAfterwards you can run this script again, and skip the steps until you are back here."
 
 echo -e "\nQuit now? "
 select yn in Continue Quit ; do
@@ -265,18 +270,29 @@ select yn in Continue Quit ; do
     esac
 done
 
+# TODO tidy up repetition
 echo -e "\nContinue setting up CKAN?"
 echo -e "Using development.ini, production.ini or skip?"
 select yn in Development Production Skip ; do
     case ${yn} in
         Development )
+            sudo service postgresql restart
             source /usr/lib/ckan/default/bin/activate
             paster --plugin=ckan db init -c /etc/ckan/default/development.ini
+            sudo ln -s /usr/lib/ckan/default/src/ckan/who.ini /etc/ckan/default/who.ini
 
+            echo -e "Adding test data to CKAN"
+            paster --plugin=ckan create-test-data -c /etc/ckan/default/development.ini
+
+            echo -e "\nUse paster serve /etc/ckan/default/development.ini to test CKAN works."
             break;;
         Production )
+            sudo service postgresql restart
             source /usr/lib/ckan/default/bin/activate
             paster --plugin=ckan db init -c /etc/ckan/default/production.ini
+            sudo ln -s /usr/lib/ckan/default/src/ckan/who.ini /etc/ckan/default/who.ini
+
+            echo -e "\nProduction server, so install uwsgi next"
 
             break;;
         Skip )

@@ -84,12 +84,12 @@ sudo firewall-cmd --zone=public --add-rich-rule='rule family="ipv4" source addre
 
 Add the ports/ port ranges/ IP addresses
 
-Add line to pg_hba.conf to allow access to ckan host IP address
+Add line to pg_hba.conf to allow access to ckan host IP address. Probably want md5 for localhost if running single-server.
 
 ```
 nano /var/lib/pgsql/9.5/data/pg_hba.conf
 
-host    all         all         XXX.XXX.XXX.XXX/32          trust
+host    all         all         XXX.XXX.XXX.XXX/32          md5
 ```
 
 Allow PostgreSQL to listen
@@ -250,7 +250,9 @@ Change the site.root to /ckan/  so that nginx can forward the resource files cor
 
 Update the solr_url in production.ini, probably to *solr_url = http://127.0.0.1:8983/solr/ckan/*
 
-Also, update sqlalchemy.url, with the passwords used when installing the postgresql server user (probably ckan_default) previously.
+Also, update sqlalchemy.url, with the passwords used when installing the postgresql server user (probably ckan_default) previously. 
+
+Change "localhost" to 127.0.0.1 if running locally.
 
 ### Initialising the DB
 
@@ -394,7 +396,7 @@ https://www.revsys.com/writings/quicktips/ssh-tunnel.html
 Once solr is running, tunnel to the server to use the browser to add the core using the GUI.
 
 ```
-ssh -f user@remote.domain.com -L 2000:remote.domain.com:25 –N
+ssh -f -N user@remote.domain.com -L 2000:127.0.0.1:25
 ```
 
 Then change the local browsers proxy settings to forward 127.0.0.1 to port 2000, or whatever custom port above. 
