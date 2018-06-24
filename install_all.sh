@@ -255,11 +255,11 @@ echo -e "\nIf this is the first time running this installer, you should quit now
 echo "Then you can run this script again, and skip the steps until you are back here."
 
 echo -e "\nQuit now? "
-select yn in Yes No ; do
+select yn in Continue Quit ; do
     case ${yn} in
-        No )
+        Continue )
             break;;
-        Yes )
+        Quit )
             echo -e "Exiting...\n\n"
             exit 0
     esac
@@ -267,7 +267,7 @@ done
 
 echo -e "\nContinue setting up CKAN?"
 echo -e "Using development.ini, production.ini or skip?"
-select yn in Yes No ; do
+select yn in Development Production Skip ; do
     case ${yn} in
         Development )
             source /usr/lib/ckan/default/bin/activate
