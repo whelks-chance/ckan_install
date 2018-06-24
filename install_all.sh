@@ -20,12 +20,22 @@ install_postgres(){
     fi
 }
 
-echo "Who am I? " whoami
+#https://askubuntu.com/a/970898
+# TODO script is run as root, all commands should be -u $SUDO_USER if available
+echo "SUDO_USER : " $SUDO_USER
+if [ $SUDO_USER ]; then
+    real_user=$SUDO_USER
+else
+    real_user=$(whoami)
+fi
+echo "Who am I really? " $real_user
+
 if [[ $EUID -ne 0 ]]; then
    echo "This script must be run as root"
 #   TODO replace this
    exit 1
 fi
+
 
 echo -e "\nShould we install PostgreSQL locally? Select No if PostgreSQL is already installed, either locally or on a different server."
 
@@ -221,6 +231,7 @@ select yn in Yes No ; do
             echo "Beginning CKAN install"
             sudo mkdir -p /usr/lib/ckan/default
 #            FIXME this creates all files with owner root
+#           TODO $real_user is now available, use below
 #           TODO use who am i | awk '{print $1}' then chown dir back to user accessible
 #           sudo chown $non_root_user -R /usr/lib/ckan/default/
             sudo chown `whoami` /usr/lib/ckan/default
