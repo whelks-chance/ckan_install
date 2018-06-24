@@ -174,6 +174,7 @@ select yn in Yes No ; do
 done
 
 echo -e "\nShould we try to (re)arrange SOLR config files and directories?"
+echo "(Check the README to find out why this is needed.)"
 select yn in Yes No ; do
     case ${yn} in
         No )
@@ -242,9 +243,49 @@ select yn in Yes No ; do
             paster make-config ckan /etc/ckan/default/development.ini
 
             sudo cp /etc/ckan/default/development.ini /etc/ckan/default/development.ini.old
+
+            echo -e "\nYou will need to update development/production ini file."
+            echo "Check the README for paster instructions."
             break;;
     esac
 done
+
+# TODO automate this bit
+echo -e "\nIf this is the first time running this installer, you should quit now and edit the development/production.ini file."
+echo "Then you can run this script again, and skip the steps until you are back here."
+
+echo -e "\nQuit now? "
+select yn in Yes No ; do
+    case ${yn} in
+        No )
+            break;;
+        Yes )
+            echo -e "Exiting...\n\n"
+            exit 0
+    esac
+done
+
+echo -e "\nContinue setting up CKAN?"
+echo -e "Using development.ini, production.ini or skip?"
+select yn in Yes No ; do
+    case ${yn} in
+        Development )
+            source /usr/lib/ckan/default/bin/activate
+            paster --plugin=ckan db init -c /etc/ckan/default/development.ini
+
+            break;;
+        Production )
+            source /usr/lib/ckan/default/bin/activate
+            paster --plugin=ckan db init -c /etc/ckan/default/production.ini
+
+            break;;
+        Skip )
+            break;;
+    esac
+done
+
+echo "Starting nginx"
+sudo service nginx restart
 
 http://docs.ckan.org/en/latest/maintaining/datastore.html
 
@@ -292,17 +333,6 @@ select yn in Yes No ; do
     esac
 done
 
-echo -e "\nShould we start nginx? "
-select yn in Yes No ; do
-    case ${yn} in
-        No )
-            break;;
-        Yes )
-            echo "Starting nginx"
-            sudo service nginx restart
-            break;;
-    esac
-done
 
 #echo "Making /etc/systemd/system/*.service files"
 

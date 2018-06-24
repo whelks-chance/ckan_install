@@ -245,15 +245,20 @@ sudo -u solr /opt/solr-7.2.1/bin/solr create -c ckan -confdir /var/solr/data/cka
 
 **production.ini has lots of additions, including passwords.**
 
-Ckan .ini file, change the site.root to /ckan/ so that nginx can forward the resource files correctly.
+If you have something else at yoursite.com/ root, change the ckan development/production.ini file.
+Change the site.root to /ckan/  so that nginx can forward the resource files correctly.
 
 Update the solr_url in production.ini, probably to *solr_url = http://127.0.0.1:8983/solr/ckan/*
+
+Also, update sqlalchemy.url, with the passwords used when installing the postgresql server user (probably ckan_default) previously.
 
 ### Initialising the DB
 
 Check the core is created. If you get Error 404, follow the "bin/solr create" instructions above, and check the solr_url is correct in production.ini
 
 ```
+source ~/ckan/lib/default/bin/activate
+
 paster --plugin=ckan db init -c /etc/ckan/default/production.ini 
 
 paster –plugin=ckan sysadmin add <<username>> email=<<an email address>> name=<<username>> -c /etc/ckan/default/<<development.ini or production.ini>>
