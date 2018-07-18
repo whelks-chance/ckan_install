@@ -9,8 +9,10 @@ install_postgres(){
     sudo service postgresql initdb
     sudo service postgresql restart
 
-    echo -e "Adding PostgreSQL user"
+    echo -e "\nAdding ckan_default PostgreSQL user"
     sudo -u postgres createuser -S -D -R -P ckan_default
+
+    echo -e "\nAdding ckan_default PostgreSQL table"
     sudo -u postgres createdb -O ckan_default ckan_default -E utf-8 --template=template0
 
     if [ $1 ] &&[ $1 == 'exit' ]
