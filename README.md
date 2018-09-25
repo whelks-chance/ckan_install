@@ -409,6 +409,8 @@ To run from ckan venv folder (useful for testing if routing is working):
 
 ```
 ~/ckan/lib/default/bin/uwsgi --socket :5000 --wsgi-file ./ckan.wsgi --virtualenv ~/ckan/lib/default --workers 4 --enable-threads -b 32768 --master --logto ./logs.txt
+
+/usr/lib/ckan/default/bin/uwsgi --socket :5000 --wsgi-file ./ckan.wsgi --virtualenv /usr/lib/ckan/default --workers 4 --enable-threads -b 32768 --master --logto ./logs2.txt
 ```
 
 ### Copy CKAN files into place

@@ -17,7 +17,7 @@ install_postgres(){
 
     if [ $1 ] &&[ $1 == 'exit' ]
     then
-        echo -e "Installed PostgreSQL only. Quitting..."
+        echo -e "\nInstalled PostgreSQL only. Quitting..."
         exit 0
     fi
 }
@@ -60,7 +60,7 @@ select yn in Yes No Only Cancel; do
     esac
 done
 
-echo -e "Set development.ini variables now?"
+echo -e "Set development.ini variables now? (Currently non-functional)"
 
 select yn in Yes No Cancel; do
 case ${yn} in
@@ -253,7 +253,11 @@ select yn in Yes No ; do
 
             echo "Create a directory to contain the site’s config files"
             sudo mkdir -p /etc/ckan/default
+
+            echo "Change ownership of /etc/ckan/"
             sudo chown -R `whoami` /etc/ckan/
+
+            echo "Change ownership of ~/ckan/etc"
             sudo chown -R `whoami` ~/ckan/etc
 
             paster make-config ckan /etc/ckan/default/development.ini
