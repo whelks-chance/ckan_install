@@ -13,7 +13,7 @@ python datapusher/main.py deployment/datapusher_settings.py
 https://github.com/whelks-chance/ckanext-ckanpackager
 
 source /home/ianh/ckan/lib/default/bin/activate
-paster setup.py develop
+python setup.py develop
 
 
 ## CKAN packager - celery pool
